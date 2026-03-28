@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jetty AI Health</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        #chat {
+            height: 450px;
+            overflow-y: auto;
+            background: #111827;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0px 0px 20px rgba(0,0,0,0.3);
+        }
+
+        .msg {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 12px;
+            max-width: 75%;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .user {
+            background: #3b82f6;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .ai {
+            background: #22c55e;
+            margin-right: auto;
+        }
+
+        .typing {
+            font-style: italic;
+            color: #94a3b8;
+        }
+
+        .input-box {
+            display: flex;
+            margin-top: 15px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        button {
+            margin-left: 10px;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 10px;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(5px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1> Jetty Health AI</h1>
+    <p class="subtitle">Your intelligent health companion</p>
+
+    <div id="chat"></div>
+
+    <div class="input-box">
+        <input id="question" placeholder="Describe how you feel...">
+        <button onclick="ask()">Send</button>
+    </div>
+</div>
+
+<script>
+const chat = document.getElementById("chat");
+const input = document.getElementById("question");
+
+input.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") ask();
+});
+
+async function ask() {
+    const question = input.value.trim();
+    if (!question) return;
+
+    addMessage(question, "user");
+    input.value = "";
+
+    // Typing indicator
+    const typing = document.createElement("div");
+    typing.className = "msg typing";
+    typing.innerText = "AI is thinking...";
+    chat.appendChild(typing);
+    chat.scrollTop = chat.scrollHeight;
+
+    const res = await fetch(" https://rank-illtempered-carl.ngrok-free.dev/ask", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({question})
+    });
+
+    const data = await res.json();
+
+    // Remove typing
+    chat.removeChild(typing);
+
+    typeEffect(data.answer);
+}
+
+function addMessage(text, type) {
+    const msg = document.createElement("div");
+    msg.className = "msg " + type;
+    msg.innerText = text;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function typeEffect(text) {
+    const msg = document.createElement("div");
+    msg.className = "msg ai";
+    chat.appendChild(msg);
+
+    let i = 0;
+    const speed = 15;
+
+    function typing() {
+        if (i < text.length) {
+            msg.innerHTML += text.charAt(i);
+            i++;
+            setTimeout(typing, speed);
+        }
+    }
+
+    typing();
+}
+</script>
+
+</body>
+</html>
